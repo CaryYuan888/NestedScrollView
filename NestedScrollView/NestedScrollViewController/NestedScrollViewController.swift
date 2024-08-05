@@ -122,10 +122,9 @@ open class NestedScrollViewController:
     }
     
     open func actualContentHeight(with scrollView: UIScrollView) -> CGFloat {
-        var height = scrollView.contentSize.height
-        height += scrollView.contentInset.bottom
-        height += scrollView.contentInset.top
-        return max(height, scrollView.frame.height)
+        let height = scrollView.contentSize.height
+        let topAndBottom = scrollView.contentInset.top + scrollView.contentInset.bottom
+        return max(height, scrollView.frame.height) + topAndBottom
     }
     
     open func updateContentHeight(with subContenHeight: CGFloat) {
