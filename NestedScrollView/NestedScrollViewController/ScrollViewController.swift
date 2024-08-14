@@ -9,4 +9,9 @@ import UIKit
 
 public protocol ScrollViewController {
     var scrollView: UIScrollView { get }
+    var additionalContentHeight: CGFloat { get }
+}
+
+public extension ScrollViewController {
+    var additionalContentHeight: CGFloat { 0 }
 }

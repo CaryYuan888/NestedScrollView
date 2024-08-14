@@ -64,10 +64,12 @@ open class NestedScrollViewController:
             scrollView.isScrollEnabled = false
             let obs = scrollView.observe(\.contentSize, options: [.new]) { [weak self] scroll, value in
                 guard let self else { return }
-                let viewController = self.viewControllers.compactMap({ $0 as? ScrollViewController }).first(where: { $0.scrollView == scroll })
-                if let viewController = viewController as? UIViewController, viewController == self.pagingViewController.currentViewController {
+                let scrollViewController = self.viewControllers.compactMap({ $0 as? ScrollViewController }).first(where: { $0.scrollView == scroll })
+                if let scrollViewController,
+                    let viewController = scrollViewController as? UIViewController,
+                    viewController == self.pagingViewController.currentViewController {
                     let height = self.actualContentHeight(with: scroll)
-                    self.updateContentHeight(with: height)
+                    self.updateContentHeight(with: height, additionalContentHeight: scrollViewController.additionalContentHeight)
                 }
             }
             obsTokens.append(obs)
@@ -78,7 +80,7 @@ open class NestedScrollViewController:
         super.viewDidLayoutSubviews()
         if let viewController = pagingViewController.currentViewController as? ScrollViewController {
             let height = actualContentHeight(with: viewController.scrollView)
-            updateContentHeight(with: height)
+            updateContentHeight(with: height, additionalContentHeight: viewController.additionalContentHeight)
         } else if let viewController = pagingViewController.currentViewController {
             viewController.view.setNeedsLayout()
             viewController.view.layoutIfNeeded()
@@ -122,14 +124,16 @@ open class NestedScrollViewController:
     }
     
     open func actualContentHeight(with scrollView: UIScrollView) -> CGFloat {
-        let height = scrollView.contentSize.height
-        let topAndBottom = scrollView.contentInset.top + scrollView.contentInset.bottom
-        return max(height, scrollView.frame.height) + topAndBottom
+        var height = scrollView.contentSize.height
+        height += scrollView.contentInset.bottom
+        height += scrollView.contentInset.top
+        return max(height, scrollView.frame.height)
     }
     
-    open func updateContentHeight(with subContenHeight: CGFloat) {
+    open func updateContentHeight(with subContenHeight: CGFloat, additionalContentHeight: CGFloat = 0) {
         var height = headerViewHeight
         height += pagingViewController.options.menuHeight
+        height += additionalContentHeight
         height += subContenHeight
         scrollView.contentSize = CGSize(width: 0, height: height)
     }
@@ -254,7 +258,7 @@ open class NestedScrollViewController:
                 
                 // 再更新当前的 ContentHeight
                 let height = actualContentHeight(with: viewController.scrollView)
-                updateContentHeight(with: height)
+                updateContentHeight(with: height, additionalContentHeight: viewController.additionalContentHeight)
                 
                 // 设置当前的偏移
                 if let offset = viewControllerOffsets[destinationViewController] {
@@ -269,7 +273,7 @@ open class NestedScrollViewController:
             if let viewController = startingViewController as? ScrollViewController {
                 // 再更新当前的 ContentHeight
                 let height = actualContentHeight(with: viewController.scrollView)
-                updateContentHeight(with: height)
+                updateContentHeight(with: height, additionalContentHeight: viewController.additionalContentHeight)
             }
         }
     }
